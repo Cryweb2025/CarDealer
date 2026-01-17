@@ -130,6 +130,7 @@ public class CarController {
     @Operation(summary = "Search a car by color")
     @GetMapping("/by-color")
     public ResponseEntity<List<Car>> searchByColor(@RequestParam String color){
+        if(color == null || color.isEmpty()) return ResponseEntity.badRequest().build();
         return ResponseEntity.ok(carRepository.findByColorIgnoreCase(color));
     }
 
