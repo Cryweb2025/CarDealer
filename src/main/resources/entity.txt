@@ -1,0 +1,18 @@
+JPA - Java Persistence API -> как должно быть
+Hibernate реализовывает JPA
+Spring Data JPA слой поверх Hibernate/JPA
+
+Состояния Entity
+- Transient объект создан, но Hibernate о нём не знает
+- Managed объект загружен из базы данных или сохранён в базе данных
+- Detached объект бал в статусе Managed, но контекст закрыт
+- Removed объект помечен на удаление
+
+Аннотации
+@Entity - помечаем класс как сущность
+@Table - задаём имя таблицы
+@Id - первичный ключ
+@GeneratedValue --> GenerationType.IDENTITY автоинкремент на стороне базы данных
+                --> SEQUENCE sequences например задали ID с 50000-75000
+                --> AUTO на усмотрение провайдера
+@Column nullable=false lenth=100 unique=true
