@@ -14,7 +14,6 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 
@@ -49,16 +48,20 @@ public class Car {
     private int price;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private CarStatus status;
 
     private String color;
 
+    @Min(value = 1, message = "Horse power must be more than 0")
     private int horsepower;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private FuelType fuelType;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Transmission transmission;
 
     public Car(String brand, String model, int productionYear, int mileage, int price, String status, String color, int horsepower, String fuelType, String transmission) {

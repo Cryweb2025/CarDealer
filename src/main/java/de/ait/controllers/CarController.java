@@ -3,50 +3,29 @@ package de.ait.controllers;
 import de.ait.enums.FuelType;
 import de.ait.model.Car;
 import de.ait.repository.CarRepository;
+import de.ait.validation.Validator;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.HttpClientErrorException;
-
-import java.util.ArrayList;
+import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Map;
 
 @Tag(name = "Car management API")
 @RestController
 @RequestMapping("/api/cars")
+@Slf4j
 public class CarController {
 
     private final CarRepository carRepository;
+    private final Validator<Car> carValidator;
 
-    private final List<Car> allCars = new ArrayList<>(List.of(
-            new Car("BMW", "X5", 2000, 30000, 35000, "AVAILABLE", "Black", 250, "PETROL", "AUTOMATIC"),
-            new Car("Audi", "A4", 2025, 2000, 25000, "SOLD", "White", 200, "PETROL", "AUTOMATIC"),
-            new Car("BMW", "320i", 2016, 85000, 18500, "AVAILABLE", "Blue", 180, "DIESEL", "MANUAL"),
-            new Car("Audi", "A6", 2020, 50000, 22000, "AVAILABLE", "Gray", 220, "PETROL", "AUTOMATIC"),
-            new Car("Mercedes", "C200", 2018, 40000, 27000, "AVAILABLE", "Silver", 190, "PETROL", "AUTOMATIC"),
-            new Car("Toyota", "Camry", 2019, 60000, 23000, "SOLD", "Red", 178, "HYBRID", "AUTOMATIC"),
-            new Car("Honda", "Civic", 2021, 15000, 21000, "AVAILABLE", "Black", 158, "PETROL", "MANUAL"),
-            new Car("Tesla", "Model 3", 2022, 10000, 40000, "AVAILABLE", "White", 283, "ELECTRIC", "AUTOMATIC"),
-            new Car("BMW", "M3", 2021, 10000, 55000, "AVAILABLE", "Blue", 473, "PETROL", "MANUAL"),
-            new Car("Audi", "Q5", 2019, 30000, 28000, "SOLD", "Gray", 248, "PETROL", "AUTOMATIC"),
-            new Car("Toyota", "Corolla", 2018, 70000, 16000, "AVAILABLE", "Silver", 132, "PETROL", "MANUAL"),
-            new Car("Toyota", "RAV4", 2020, 25000, 27000, "AVAILABLE", "Green", 203, "HYBRID", "AUTOMATIC")
-    ));
-
-    public CarController(CarRepository carRepository) {
+    public CarController(CarRepository carRepository, Validator<Car> carValidator) {
         this.carRepository = carRepository;
+        this.carValidator = carValidator;
     }
 
     @Value("${app.dealership.name:AIT Gr.59 API}")
@@ -57,92 +36,121 @@ public class CarController {
         return ResponseEntity.ok("Welcome to the " + dealerShipName + " car dealership!");
     }
 
+    // ---------- GET ----------
+
     @Operation(summary = "Get all cars")
     @GetMapping
     public ResponseEntity<List<Car>> getAllCars() {
         return ResponseEntity.ok(carRepository.findAll());
     }
 
+    @Operation(summary = "Get car by id")
     @GetMapping("/{id}")
     public ResponseEntity<Car> getCarById(@PathVariable Long id) {
+        return carRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    // ---------- POST ----------
+
+    @Operation(summary = "Add a new car")
+    @PostMapping
+    public ResponseEntity<Object> addCar(@RequestBody Car car) {
+
+        List<String> errors = carValidator.validateWithErrors(car);
+
+        if (!errors.isEmpty()) {
+            log.warn("Car validation with ID: {} is failed! | Errors: {}", car.getId(), errors);
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of("errors", errors));
+        }
+
+        Car savedCar = carRepository.save(car);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(savedCar.getId());
+    }
+
+    // ---------- PUT ----------
+
+    @Operation(summary = "Update one car by id")
+    @PutMapping("/{id}")
+    public ResponseEntity<Object> updateCar(@PathVariable Long id, @RequestBody Car car) {
+
         if (!carRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ofNullable(carRepository.findById(id).orElse(null));
+
+        List<String> errors = carValidator.validateWithErrors(car);
+
+        if (!errors.isEmpty()) {
+            log.warn("Car update validation failed for id {} | Errors: {}", id, errors);
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of("errors", errors));
+        }
+
+        car.setId(id);
+        Car updatedCar = carRepository.save(car);
+        return ResponseEntity.ok(updatedCar);
     }
+
+    // ---------- DELETE ----------
 
     @Operation(summary = "Delete a car by id")
     @DeleteMapping("/{id}")
-    public ResponseEntity deleteCar(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteCar(@PathVariable Long id) {
+
         if (!carRepository.existsById(id)) {
+            log.warn("Car with id {} does not exist", id);
             return ResponseEntity.notFound().build();
         }
+
         carRepository.deleteById(id);
+        log.warn("Car with id {} has been deleted", id);
         return ResponseEntity.noContent().build();
     }
 
+    // ---------- SEARCH ----------
 
-    //api/cars/search?brand=BMW
-    @Operation(summary = "Search a car by brand")
+    @Operation(summary = "Search cars by brand")
     @GetMapping("/search")
     public ResponseEntity<List<Car>> searchCars(@RequestParam String brand) {
         return ResponseEntity.ok(carRepository.findByBrand(brand));
     }
 
-
-    @Operation(summary = "Add a new car")
-    @PostMapping
-    public ResponseEntity<Long> addCar(@RequestBody Car car) {
-        Car savedCar = carRepository.save(car);
-        if (savedCar == null) {
-            return ResponseEntity.badRequest().build();
-        }
-        return new ResponseEntity(HttpStatusCode.valueOf(201));
-    }
-
-    @Operation(summary = "Update one car by id")
-    @PutMapping("/{id}")
-    public ResponseEntity updateCar(@PathVariable Long id, @RequestBody Car car) {
-        if (carRepository.existsById(id)) {
-            Car carToUpdate = carRepository.findById(id).orElse(null);
-            carToUpdate.setBrand(car.getBrand());
-            carToUpdate.setModel(car.getModel());
-            carToUpdate.setProductionYear(car.getProductionYear());
-            carToUpdate.setMileage(car.getMileage());
-            carToUpdate.setPrice(car.getPrice());
-            carToUpdate.setStatus(car.getStatus());
-            carRepository.save(carToUpdate);
-            return ResponseEntity.ok("updated car with id = " + id);
-        }
-        return ResponseEntity.notFound().build();
-    }
-
-    // GET /api/cars/by-price?min=10000&max=20000
-    @Operation(summary = "Search car by price between")
+    @Operation(summary = "Search car by price range")
     @GetMapping("/by-price")
     public ResponseEntity<List<Car>> searchByPriceBetween(
-            @RequestParam int min, @RequestParam int max
-    ) {
+            @RequestParam int min,
+            @RequestParam int max) {
+
+        if (min < 0 || max < 0 || min > max) {
+            return ResponseEntity.badRequest().build();
+        }
+
         return ResponseEntity.ok(carRepository.findByPriceBetween(min, max));
     }
 
-    // GET /api/cars/by-color?color=black
-    @Operation(summary = "Search a car by color")
+    @Operation(summary = "Search car by color")
     @GetMapping("/by-color")
-    public ResponseEntity<List<Car>> searchByColor(@RequestParam String color){
-        if(color == null || color.isEmpty()) return ResponseEntity.badRequest().build();
-        return ResponseEntity.ok(carRepository.findByColorIgnoreCase(color));
-    }
+    public ResponseEntity<List<Car>> searchByColor(@RequestParam String color) {
 
-    // GET /api/cars/by-fuel?fuelType=DIESEL
-    @Operation(summary = "Search a car by fuel type")
-    @GetMapping("/by-fuel")
-    public ResponseEntity<List<Car>> searchByFuelType(@RequestParam FuelType fuelType) {
-        if (fuelType == null) {
+        if (color == null || color.isBlank()) {
             return ResponseEntity.badRequest().build();
         }
 
+        return ResponseEntity.ok(carRepository.findByColorIgnoreCase(color));
+    }
+
+    @Operation(summary = "Search car by fuel type")
+    @GetMapping("/by-fuel")
+    public ResponseEntity<List<Car>> searchByFuelType(@RequestParam FuelType fuelType) {
+
         List<Car> cars = carRepository.findByFuelType(fuelType);
+
         if (cars.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -150,8 +158,7 @@ public class CarController {
         return ResponseEntity.ok(cars);
     }
 
-    // GET /api/cars/by-power?minHp=150&maxHp=300
-    @Operation(summary = "Search cars with horsepower between given range")
+    @Operation(summary = "Search cars by horsepower range")
     @GetMapping("/by-power")
     public ResponseEntity<List<Car>> searchByHorsePower(
             @RequestParam int minHp,
@@ -162,12 +169,11 @@ public class CarController {
         }
 
         List<Car> cars = carRepository.findByHorsepowerBetween(minHp, maxHp);
+
         if (cars.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
         return ResponseEntity.ok(cars);
     }
-
-
 }
