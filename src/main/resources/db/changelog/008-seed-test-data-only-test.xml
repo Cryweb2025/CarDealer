@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <changeSet id="008-seed-test-data" author="Vladimir Weber" context="test">
+        <insert tableName="cars">
+            <column name="brand" value="Toyota"/>
+            <column name="model" value="Corolla"/>
+            <column name="production_year" valueNumeric="2015"/>
+            <column name="mileage" valueNumeric="55000"/>
+            <column name="price" valueNumeric="9500"/>
+            <column name="status" value="AVAILABLE"/>
+            <column name="color" value="Silver"/>
+            <column name="horsepower" valueNumeric="132"/>
+            <column name="fuel_type" value="PETROL"/>
+            <column name="transmission" value="MANUAL"/>
+            <column name="deleted" valueBoolean="false"/>
+        </insert>
+
+        <insert tableName="cars">
+            <column name="brand" value="Volkswagen"/>
+            <column name="model" value="Passat"/>
+            <column name="production_year" valueNumeric="2018"/>
+            <column name="mileage" valueNumeric="72000"/>
+            <column name="price" valueNumeric="13500"/>
+            <column name="status" value="SOLD"/>
+            <column name="color" value="Blue"/>
+            <column name="horsepower" valueNumeric="150"/>
+            <column name="fuel_type" value="DIESEL"/>
+            <column name="transmission" value="AUTOMATIC"/>
+            <column name="deleted" valueBoolean="false"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>
