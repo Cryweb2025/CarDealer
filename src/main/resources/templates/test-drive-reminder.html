@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Напоминание о тест-драйве</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 20px;">
+  <tr>
+    <td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+        <tr>
+          <td style="background-color: #004aad; padding: 20px; text-align: center;">
+            <h1 style="color: #ffffff; margin: 0;">Автосалон “59 Auto”</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 30px;">
+            <h2 style="color: #333;">Здравствуйте, <span th:text="${clientName}"></span>!</h2>
+            <p style="font-size: 16px; color: #555;">
+              Напоминаем вам, что вы записаны на тест-драйв автомобиля:
+            </p>
+
+            <div style="margin-top: 20px; padding: 15px; background-color: #f0f8ff; border-left: 5px solid #004aad;">
+              <h3 style="text-align: center;margin-top: 0; ">Забронированный автомобиль</h3>
+              <hr>
+              <p><strong>Марка:</strong> <span th:text="${car.brand}"></span></p>
+              <p><strong>Модель:</strong> <span th:text="${car.model}"></span></p>
+              <p><strong>Цвет:</strong> <span th:text="${car.color}"></span></p>
+              <p><strong>Трансмиссия:</strong> <span th:text="${car.transmission}"></span></p>
+              <p><strong>Тип топлива:</strong> <span th:text="${car.fuelType}"></span></p>
+              <p><strong>Мощность:</strong> <span th:text="${car.horsepower + ' PS'}"></span></p>
+              <p><strong>Цена:</strong> <span th:text="${car.price + ' €'}"></span></p>
+              <h3 style="text-align: center;margin-top: 0; ">Место и время</h3>
+              <hr>
+              <p><strong>Дата и время:</strong> <span th:text="${testDriveDateTime}"></span></p>
+              <p><strong>Адрес:</strong> <span th:text="${dealerAddress}"></span></p>
+              <p><strong>Телефон:</strong> <span th:text="${dealerPhone}"></span></p>
+            </div>
+
+            <div style="margin-top: 30px; text-align: center;">
+              <a href="#" style="display: inline-block; padding: 12px 24px; background-color: #e60000; color: #fff; text-decoration: none; font-weight: bold; border-radius: 4px;">
+                Отменить запись
+              </a>
+            </div>
+
+            <p style="font-size: 14px; color: #999; margin-top: 30px;">
+              Если вы не сможете приехать — пожалуйста, отмените или перенесите запись по ссылке выше.
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:18px 24px; background:#f9fafb; color:#6b7280; font-size:12px; text-align: center">
+            Контакты: +49 000 000000 • support@autopro.example<br/>
+            Это письмо отправлено автоматически. Если вы не записывались — просто проигнорируйте его.
+          </td>
+        </tr>
+        <tr>
+          <td style="background-color: #f1f1f1; text-align: center; padding: 15px; font-size: 12px; color: #777;">
+            © 2026 Автосалон “59 Auto”. Все права защищены.
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>
